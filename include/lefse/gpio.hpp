@@ -1,9 +1,9 @@
 #ifndef LEFSE_GPIO_HPP_INCLUDED
 #define LEFSE_GPIO_HPP_INCLUDED
 
-#include <zephyr/drivers/gpio.h>
+#include "sg14/inplace_function.h"
 
-#include <functional>
+#include <zephyr/drivers/gpio.h>
 
 namespace lefse
 {
@@ -44,18 +44,16 @@ public:
     using native_type          = struct gpio_callback;
     using native_pointer       = native_type*;
     using native_const_pointer = const native_type*;
-    using callback_type        = std::function<void()>;
+    using callback_type        = stdext::inplace_function<void()>;
 
     gpio_cb(callback_type callback, gpio_port_pins_t pin_mask) noexcept
         : callback_ { callback }
     {
         gpio_init_callback(
             &callback_data_,
-            [](const struct device* /*port*/, struct gpio_callback* cb,
-               gpio_port_pins_t /*pins*/)
+            [](const struct device* /*port*/, struct gpio_callback* cb, gpio_port_pins_t /*pins*/)
             {
-                auto* callee = static_cast<gpio_cb*>(
-                    CONTAINER_OF(cb, gpio_cb, callback_data_));
+                auto* callee = static_cast<gpio_cb*>(CONTAINER_OF(cb, gpio_cb, callback_data_));
                 if (callee->callback_)
                     callee->callback_();
             },
@@ -71,17 +69,15 @@ public:
 
     native_pointer native_handle() noexcept { return &callback_data_; }
 
-    native_const_pointer native_handle() const noexcept
-    {
-        return &callback_data_;
-    }
+    native_const_pointer native_handle() const noexcept { return &callback_data_; }
 
 private:
     native_type   callback_data_;
     callback_type callback_;
 };
 
-template <typename Gpio_T> class gpio_base
+template <typename Gpio_T>
+class gpio_base
 {
 public:
     using native_type          = struct gpio_dt_spec;
@@ -90,13 +86,12 @@ public:
 
     bool is_ready() noexcept { return gpio_is_ready_dt(native_handle()); }
 
-    int configure(gpio_direction direction, gpio_pull pull = gpio_pull::none,
-                  gpio_output_init output_init
-                  = gpio_output_init::none) noexcept
+    int configure(gpio_direction   direction,
+                  gpio_pull        pull        = gpio_pull::none,
+                  gpio_output_init output_init = gpio_output_init::none) noexcept
     {
-        gpio_flags_t flags = static_cast<gpio_flags_t>(direction)
-                           | static_cast<gpio_flags_t>(pull)
-                           | static_cast<gpio_flags_t>(output_init);
+        gpio_flags_t flags = static_cast<gpio_flags_t>(direction) | static_cast<gpio_flags_t>(pull)
+                             | static_cast<gpio_flags_t>(output_init);
         return gpio_pin_configure_dt(native_handle(), flags);
     }
 
@@ -113,21 +108,16 @@ public:
 
     int remove_callback(gpio_cb callback)
     {
-        return gpio_remove_callback_dt(native_handle(),
-                                       callback.native_handle());
+        return gpio_remove_callback_dt(native_handle(), callback.native_handle());
     }
 
-    int set(int value) noexcept
-    {
-        return gpio_pin_set_dt(native_handle(), value);
-    }
+    int set(int value) noexcept { return gpio_pin_set_dt(native_handle(), value); }
 
     int get() noexcept { return gpio_pin_get_dt(native_handle()); }
 
-    native_pointer native_handle() noexcept
-    {
-        return static_cast<Gpio_T*>(this)->native_handle();
-    }
+    int toggle() noexcept { return gpio_pin_toggle_dt(native_handle()); }
+
+    native_pointer native_handle() noexcept { return static_cast<Gpio_T*>(this)->native_handle(); }
 
     native_const_pointer native_handle() const noexcept
     {
@@ -145,10 +135,7 @@ public:
 
     native_pointer native_handle() noexcept { return &gpio_dt_spec_; }
 
-    native_const_pointer native_handle() const noexcept
-    {
-        return &gpio_dt_spec_;
-    }
+    native_const_pointer native_handle() const noexcept { return &gpio_dt_spec_; }
 
 private:
     native_type gpio_dt_spec_;
@@ -174,7 +161,8 @@ public:
         return this;
     }
 
-    template <typename Gpio_T> gpio_ref* operator=(Gpio_T gpio)
+    template <typename Gpio_T>
+    gpio_ref* operator=(Gpio_T gpio)
     {
         gpio_dt_spec_ = gpio.native_handle();
         return this;
@@ -182,10 +170,7 @@ public:
 
     native_pointer native_handle() noexcept { return gpio_dt_spec_; }
 
-    native_const_pointer native_handle() const noexcept
-    {
-        return gpio_dt_spec_;
-    }
+    native_const_pointer native_handle() const noexcept { return gpio_dt_spec_; }
 
 private:
     native_pointer gpio_dt_spec_;
