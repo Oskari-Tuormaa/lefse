@@ -41,6 +41,22 @@ public:
     }
 
     /**
+     * @brief Start a one-shot timer.
+     *
+     * This method starts a timer, and resets its status to zero. The timer begins counting down
+     * using the specified duration.
+     *
+     * Attempting to start a timer that is already running is permitted. The timer's status is reset
+     * to zero and the timer begins counting down using the new duration.
+     *
+     * @param duration Timer duration.
+     */
+    void start(k_timeout_t duration) noexcept
+    {
+        k_timer_start(native_handle(), duration, K_NO_WAIT);
+    }
+
+    /**
      * @brief Stop a timer.
      *
      * This method stops a running timer prematurely. The timer's stop function, if one exists, is
