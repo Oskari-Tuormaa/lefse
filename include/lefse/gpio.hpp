@@ -329,7 +329,7 @@ public:
      *
      * @param spec Pointer to the GPIO descriptor.
      */
-    explicit gpio_ref(gpio_dt_spec* spec)
+    explicit gpio_ref(native_pointer spec)
         : gpio_dt_spec_ { spec }
     {
         __ASSERT_NO_MSG(gpio_dt_spec_ != nullptr);
@@ -352,7 +352,7 @@ public:
      * @param spec Pointer to the new GPIO descriptor.
      * @return A pointer to this `gpio_ref` object.
      */
-    gpio_ref* operator=(gpio_dt_spec* spec)
+    gpio_ref* operator=(native_pointer spec)
     {
         gpio_dt_spec_ = spec;
         __ASSERT_NO_MSG(gpio_dt_spec_ != nullptr);
