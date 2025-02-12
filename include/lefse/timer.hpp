@@ -22,7 +22,6 @@ public:
     using native_type          = struct k_timer;
     using native_pointer       = native_type*;
     using native_const_pointer = const native_type*;
-    using callback_type        = stdext::inplace_function<void()>;
 
     /**
      * @brief Start a timer.
@@ -143,6 +142,8 @@ public:
 class timer : public timer_base<timer>
 {
 public:
+    using callback_type = stdext::inplace_function<void()>;
+
     /**
      * @brief Constructs a timer given expiry and stop callbacks.
      * This routine initializes a timer, prior to its first use.
