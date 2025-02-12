@@ -24,9 +24,9 @@ public:
     using native_const_pointer = const native_type*;
 
     /**
-     * @brief Start a timer.
+     * @brief Start the timer.
      *
-     * This method starts a timer, and resets its status to zero. The timer begins counting down
+     * This method starts the timer, and resets its status to zero. The timer begins counting down
      * using the specified duration and period values.
      *
      * Attempting to start a timer that is already running is permitted. The timer's status is reset
@@ -41,10 +41,10 @@ public:
     }
 
     /**
-     * @brief Start a one-shot timer.
+     * @brief Start the timer as a one-shot.
      *
-     * This method starts a timer, and resets its status to zero. The timer begins counting down
-     * using the specified duration.
+     * This method starts the timer as a one-shot, and resets its status to zero. The timer begins
+     * counting down using the specified duration.
      *
      * Attempting to start a timer that is already running is permitted. The timer's status is reset
      * to zero and the timer begins counting down using the new duration.
@@ -57,9 +57,9 @@ public:
     }
 
     /**
-     * @brief Stop a timer.
+     * @brief Stop the timer.
      *
-     * This method stops a running timer prematurely. The timer's stop function, if one exists, is
+     * This method stops the timer prematurely. The timer's stop function, if one exists, is
      * invoked by the caller.
      *
      * Attempting to stop a timer that is not running is permitted, but has no effect on the timer.
@@ -105,7 +105,7 @@ public:
     }
 
     /**
-     * @brief Get next expiration time of a timer, in system ticks
+     * @brief Get next expiration time of the timer, in system ticks
      *
      * This method returns the future system uptime reached at the next time of expiration of the
      * timer, in units of system ticks. If the timer is not running, current system time is
@@ -119,9 +119,9 @@ public:
     }
 
     /**
-     * @brief Get time remaining before a timer next expires, in system ticks
+     * @brief Get time remaining before the timer next expires, in system ticks
      *
-     * This method computes the time remaining before a running timer next expires, in units of
+     * This method computes the time remaining before the running timer next expires, in units of
      * system ticks. If the timer is not running, it returns zero.
      *
      * @return Remaining time until expiration, in ticks
