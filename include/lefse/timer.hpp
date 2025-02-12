@@ -214,6 +214,26 @@ public:
     }
 
     /**
+     * @brief Sets the expiry callback function.
+     *
+     * @param expiry_callback Function to invoke each time the timer expires.
+     */
+    void set_expiry_callback(callback_type expiry_callback)
+    {
+        expiry_callback_ = expiry_callback;
+    }
+
+    /**
+     * @brief Sets the stop callback function.
+     *
+     * @param stop_callback Function to invoke if the timer is stopped while running.
+     */
+    void set_stop_callback(callback_type stop_callback)
+    {
+        stop_callback_ = stop_callback;
+    }
+
+    /**
      * @brief Retrieves a pointer to the native Timer descriptor.
      *
      * @return A mutable pointer to the native Timer descriptor.
