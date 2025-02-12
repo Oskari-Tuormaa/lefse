@@ -76,11 +76,11 @@ public:
      * @brief Read timer status.
      *
      * This method reads the timer's status, which indicates the number of times it has expired
-     * since its status was last read. Calling this routine resets the timer's status to zero.
+     * since its status was last read. Calling this method resets the timer's status to zero.
      *
      * @return Timer status.
      */
-    uint32_t status_get() noexcept
+    auto status_get() noexcept
     {
         return k_timer_status_get(native_handle());
     }
@@ -88,18 +88,18 @@ public:
     /**
      * @brief Synchronize thread to timer expiration.
      *
-     * This routine blocks the calling thread until the timer's status is non-zero (indicating that
+     * This method blocks the calling thread until the timer's status is non-zero (indicating that
      * it has expired at least once since it was last examined) or the timer is stopped. If the
      * timer status is already non-zero, or the timer is already stopped, the caller continues
      * without waiting.
      *
-     * Calling this routine resets the timer's status to zero.
+     * Calling this method resets the timer's status to zero.
      *
-     * This routine must not be used by interrupt handlers, since they are not allowed to block.
+     * This method must not be used by interrupt handlers, since they are not allowed to block.
      *
      * @return Timer status.
      */
-    uint32_t status_sync() noexcept
+    auto sync() noexcept
     {
         return k_timer_status_sync(native_handle());
     }
@@ -113,7 +113,7 @@ public:
      *
      * @return Uptime of expiration, in ticks
      */
-    k_ticks_t expires_ticks() noexcept
+    auto expires_ticks() noexcept
     {
         return k_timer_expires_ticks(native_handle());
     }
@@ -126,7 +126,7 @@ public:
      *
      * @return Remaining time until expiration, in ticks
      */
-    k_ticks_t remaining_ticks() noexcept
+    auto remaining_ticks() noexcept
     {
         return k_timer_remaining_ticks(native_handle());
     }
@@ -162,10 +162,10 @@ public:
 
     /**
      * @brief Constructs a timer given expiry and stop callbacks.
-     * This routine initializes a timer, prior to its first use.
+     * This method initializes a timer, prior to its first use.
      *
-     * @param expiry_fn Function to invoke each time the timer expires.
-     * @param stop_fn Function to invoke if the timer is stopped while running.
+     * @param expiry_callback Function to invoke each time the timer expires.
+     * @param stop_callback Function to invoke if the timer is stopped while running.
      */
     timer(callback_type expiry_callback, callback_type stop_callback) noexcept
         : expiry_callback_ { expiry_callback }
@@ -195,9 +195,9 @@ public:
 
     /**
      * @brief Constructs a timer given only a expiry callback.
-     * This routine initializes a timer, prior to its first use.
+     * This method initializes a timer, prior to its first use.
      *
-     * @param expiry_fn Function to invoke each time the timer expires.
+     * @param expiry_callback Function to invoke each time the timer expires.
      */
     explicit timer(callback_type expiry_callback) noexcept
         : timer(expiry_callback, NULL)
@@ -206,7 +206,7 @@ public:
 
     /**
      * @brief Constructs a timer with neither expiry nor stop callbacks.
-     * This routine initializes a timer, prior to its first use.
+     * This method initializes a timer, prior to its first use.
      */
     timer() noexcept
         : timer(NULL, NULL)
@@ -268,8 +268,8 @@ private:
  * @brief Timer reference class that holds a reference to a Timer descriptor.
  *
  * This class allows for referencing existing Timer objects without owning them.
- * It provides the same functionality as `timer` but operates on external
- * descriptors.
+ * It provides nearly the same functionality as `timer` but operates on external
+ * descriptors, and does not allow changing expiry and stop callbacks.
  */
 class timer_ref : public timer_base<timer_ref>
 {
