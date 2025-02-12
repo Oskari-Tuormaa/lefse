@@ -49,7 +49,7 @@ enum class gpio_output_init
  */
 enum class gpio_interrupt
 {
-    none         = 0,                     /**< No interrupt is enabled. */
+    none         = GPIO_INT_DISABLE,      /**< No interrupt is enabled. */
     edge_falling = GPIO_INT_EDGE_FALLING, /**< Interrupt on falling edge. */
     edge_rising  = GPIO_INT_EDGE_RISING,  /**< Interrupt on rising edge. */
     edge_both    = GPIO_INT_EDGE_BOTH     /**< Interrupt on both edges. */
