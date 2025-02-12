@@ -4,6 +4,7 @@
 #include "sg14/inplace_function.h"
 
 #include <zephyr/drivers/gpio.h>
+#include <zephyr/sys/__assert.h>
 
 namespace lefse
 {
@@ -293,6 +294,7 @@ public:
     explicit gpio_ref(gpio_dt_spec* spec)
         : gpio_dt_spec_ { spec }
     {
+        __ASSERT_NO_MSG(gpio_dt_spec_ != nullptr);
     }
 
     /**
@@ -315,6 +317,7 @@ public:
     gpio_ref* operator=(gpio_dt_spec* spec)
     {
         gpio_dt_spec_ = spec;
+        __ASSERT_NO_MSG(gpio_dt_spec_ != nullptr);
         return this;
     }
 
@@ -328,6 +331,7 @@ public:
     gpio_ref* operator=(Gpio_T gpio)
     {
         gpio_dt_spec_ = gpio.native_handle();
+        __ASSERT_NO_MSG(gpio_dt_spec_ != nullptr);
         return this;
     }
 
