@@ -59,9 +59,9 @@ enum class gpio_interrupt
  * @class gpio_cb
  * @brief Represents a GPIO callback handler.
  *
- * This class encapsulates a GPIO callback, allowing users to associate a function
- * with GPIO events. It uses `stdext::inplace_function<void()>` for the callback,
- * ensuring efficient and flexible callback handling.
+ * This class encapsulates a GPIO callback, allowing users to associate a
+ * function with GPIO events. It uses `stdext::inplace_function<void()>` for the
+ * callback, ensuring efficient and flexible callback handling.
  */
 class gpio_cb
 {
@@ -72,7 +72,8 @@ public:
     using callback_type        = stdext::inplace_function<void()>;
 
     /**
-     * @brief Constructs a GPIO callback object with a specified callback function and pin mask.
+     * @brief Constructs a GPIO callback object with a specified callback
+     * function and pin mask.
      *
      * @param callback The callback function to invoke on a GPIO event.
      * @param pin_mask The GPIO pin mask for which this callback is registered.
@@ -92,7 +93,8 @@ public:
     }
 
     /**
-     * @brief Constructs a GPIO callback object with no initial callback function.
+     * @brief Constructs a GPIO callback object with no initial callback
+     * function.
      *
      * @param pin_mask The GPIO pin mask for which this callback is registered.
      */
@@ -106,21 +108,31 @@ public:
      *
      * @param callback The callback function to invoke.
      */
-    void set_callback(callback_type callback) noexcept { callback_ = callback; }
+    void set_callback(callback_type callback) noexcept
+    {
+        callback_ = callback;
+    }
 
     /**
      * @brief Retrieves a pointer to the native GPIO callback structure.
      *
      * @return A mutable pointer to the native GPIO callback structure.
      */
-    native_pointer native_handle() noexcept { return &callback_data_; }
+    native_pointer native_handle() noexcept
+    {
+        return &callback_data_;
+    }
 
     /**
-     * @brief Retrieves a pointer to the native GPIO callback structure (const version).
+     * @brief Retrieves a pointer to the native GPIO callback structure (const
+     * version).
      *
      * @return A constant pointer to the native GPIO callback structure.
      */
-    native_const_pointer native_handle() const noexcept { return &callback_data_; }
+    native_const_pointer native_handle() const noexcept
+    {
+        return &callback_data_;
+    }
 
 private:
     native_type   callback_data_;
@@ -130,9 +142,9 @@ private:
 /**
  * @brief Base class for GPIO operations, providing common functionality.
  *
- * This class serves as a template base for GPIO handling, allowing derived classes
- * to define their specific GPIO implementations. It provides methods to configure,
- * control, and interact with GPIO pins.
+ * This class serves as a template base for GPIO handling, allowing derived
+ * classes to define their specific GPIO implementations. It provides methods to
+ * configure, control, and interact with GPIO pins.
  */
 template <typename Gpio_T>
 class gpio_base
@@ -147,13 +159,17 @@ public:
      *
      * @return True if the GPIO is ready, false otherwise.
      */
-    bool is_ready() noexcept { return gpio_is_ready_dt(native_handle()); }
+    bool is_ready() noexcept
+    {
+        return gpio_is_ready_dt(native_handle());
+    }
 
     /**
      * @brief Configures the GPIO with the given parameters.
      *
      * @param direction The GPIO direction (input, output, or disconnected).
-     * @param pull The pull-up or pull-down resistor configuration (default: none).
+     * @param pull The pull-up or pull-down resistor configuration (default:
+     * none).
      * @param output_init Initial output state (default: none).
      * @return Zero on success, or a negative error code on failure.
      */
@@ -169,7 +185,8 @@ public:
     /**
      * @brief Configures the GPIO interrupt trigger mode.
      *
-     * @param trigger The interrupt trigger type (e.g., rising edge, falling edge, etc.).
+     * @param trigger The interrupt trigger type (e.g., rising edge, falling
+     * edge, etc.).
      * @return Zero on success, or a negative error code on failure.
      */
     int configure_interrupt(gpio_interrupt trigger)
@@ -206,28 +223,41 @@ public:
      * @param value The output value (0 or 1).
      * @return Zero on success, or a negative error code on failure.
      */
-    int set(int value) noexcept { return gpio_pin_set_dt(native_handle(), value); }
+    int set(int value) noexcept
+    {
+        return gpio_pin_set_dt(native_handle(), value);
+    }
 
     /**
      * @brief Reads the current value of the GPIO pin.
      *
-     * @return The current GPIO pin value (0 or 1), or a negative error code on failure.
+     * @return The current GPIO pin value (0 or 1), or a negative error code on
+     * failure.
      */
-    int get() noexcept { return gpio_pin_get_dt(native_handle()); }
+    int get() noexcept
+    {
+        return gpio_pin_get_dt(native_handle());
+    }
 
     /**
      * @brief Toggles the GPIO output value.
      *
      * @return Zero on success, or a negative error code on failure.
      */
-    int toggle() noexcept { return gpio_pin_toggle_dt(native_handle()); }
+    int toggle() noexcept
+    {
+        return gpio_pin_toggle_dt(native_handle());
+    }
 
     /**
      * @brief Retrieves a pointer to the native GPIO descriptor.
      *
      * @return A mutable pointer to the native GPIO descriptor.
      */
-    native_pointer native_handle() noexcept { return static_cast<Gpio_T*>(this)->native_handle(); }
+    native_pointer native_handle() noexcept
+    {
+        return static_cast<Gpio_T*>(this)->native_handle();
+    }
 
     /**
      * @brief Retrieves a pointer to the native GPIO descriptor (const version).
@@ -244,7 +274,8 @@ public:
  * @brief GPIO class that directly owns a GPIO descriptor.
  *
  * This class represents a GPIO pin and provides an interface for configuration
- * and control. It derives from `gpio_base` to inherit common GPIO functionality.
+ * and control. It derives from `gpio_base` to inherit common GPIO
+ * functionality.
  */
 class gpio : public gpio_base<gpio>
 {
@@ -264,14 +295,20 @@ public:
      *
      * @return A mutable pointer to the native GPIO descriptor.
      */
-    native_pointer native_handle() noexcept { return &gpio_dt_spec_; }
+    native_pointer native_handle() noexcept
+    {
+        return &gpio_dt_spec_;
+    }
 
     /**
      * @brief Retrieves a pointer to the native GPIO descriptor (const version).
      *
      * @return A constant pointer to the native GPIO descriptor.
      */
-    native_const_pointer native_handle() const noexcept { return &gpio_dt_spec_; }
+    native_const_pointer native_handle() const noexcept
+    {
+        return &gpio_dt_spec_;
+    }
 
 private:
     native_type gpio_dt_spec_;
@@ -281,7 +318,8 @@ private:
  * @brief GPIO reference class that holds a reference to a GPIO descriptor.
  *
  * This class allows for referencing existing GPIO objects without owning them.
- * It provides the same functionality as `gpio` but operates on external descriptors.
+ * It provides the same functionality as `gpio` but operates on external
+ * descriptors.
  */
 class gpio_ref : public gpio_base<gpio_ref>
 {
@@ -340,14 +378,20 @@ public:
      *
      * @return A mutable pointer to the native GPIO descriptor.
      */
-    native_pointer native_handle() noexcept { return gpio_dt_spec_; }
+    native_pointer native_handle() noexcept
+    {
+        return gpio_dt_spec_;
+    }
 
     /**
      * @brief Retrieves a pointer to the native GPIO descriptor (const version).
      *
      * @return A constant pointer to the native GPIO descriptor.
      */
-    native_const_pointer native_handle() const noexcept { return gpio_dt_spec_; }
+    native_const_pointer native_handle() const noexcept
+    {
+        return gpio_dt_spec_;
+    }
 
 private:
     native_pointer gpio_dt_spec_;
