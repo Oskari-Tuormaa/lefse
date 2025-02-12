@@ -171,20 +171,26 @@ public:
         : expiry_callback_ { expiry_callback }
         , stop_callback_ { stop_callback }
     {
-        k_timer_init(
-            &timer_,
-            [](k_timer* timer)
+        k_timer_expiry_t expiry_fn = [](k_timer* t) noexcept
+        {
+            auto self = get_user_data(t);
+            if (self != nullptr && self->expiry_callback_)
             {
-                auto* callee = static_cast<class timer*>(CONTAINER_OF(timer, class timer, timer_));
-                if (callee->expiry_callback_)
-                    callee->expiry_callback_();
-            },
-            [](k_timer* timer)
+                self->expiry_callback_();
+            }
+        };
+
+        k_timer_stop_t stop_fn = [](k_timer* t) noexcept
+        {
+            auto self = get_user_data(t);
+            if (self != nullptr && self->stop_callback_)
             {
-                auto* callee = static_cast<class timer*>(CONTAINER_OF(timer, class timer, timer_));
-                if (callee->stop_callback_)
-                    callee->stop_callback_();
-            });
+                self->stop_callback_();
+            }
+        };
+
+        k_timer_init(&timer_, expiry_fn, stop_fn);
+        k_timer_user_data_set(native_pointer(), this);
     }
 
     /**
@@ -228,6 +234,11 @@ public:
     }
 
 private:
+    static timer* get_user_data(k_timer* t) noexcept
+    {
+        return static_cast<timer*>(k_timer_user_data_get(t));
+    }
+
     native_type   timer_;
     callback_type expiry_callback_;
     callback_type stop_callback_;
