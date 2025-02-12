@@ -190,7 +190,7 @@ public:
         };
 
         k_timer_init(&timer_, expiry_fn, stop_fn);
-        k_timer_user_data_set(native_pointer(), this);
+        k_timer_user_data_set(native_handle(), this);
     }
 
     /**
