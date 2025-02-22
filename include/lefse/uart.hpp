@@ -144,7 +144,7 @@ public:
      *
      * @param data Span pointing to data to send.
      */
-    int write(std::span<value_type> data) noexcept
+    int write(const std::span<const value_type> data) noexcept
     {
         for (auto byte : data)
         {
@@ -158,7 +158,7 @@ public:
      *
      * @param str String to send.
      */
-    int write(std::string_view str) noexcept
+    int write(const std::string_view str) noexcept
     {
         for (auto ch : str)
         {
@@ -308,12 +308,12 @@ public:
         return uart_rx_enable(native_handle(), &span.front(), span.size_bytes(), timeout);
     }
 
-    int tx(std::span<value_type> span, int32_t timeout) noexcept
+    int tx(const std::span<const value_type> span, int32_t timeout) noexcept
     {
         return uart_tx(native_handle(), &span.front(), span.size_bytes(), timeout);
     }
 
-    int tx(std::string_view str, int32_t timeout) noexcept
+    int tx(const std::string_view str, int32_t timeout) noexcept
     {
         return uart_tx(native_handle(),
                        reinterpret_cast<const uint8_t*>(&str.front()),
