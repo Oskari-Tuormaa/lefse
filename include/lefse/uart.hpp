@@ -5,10 +5,89 @@
 
 #include <span>
 #include <string_view>
+#include <utility>
+#include <variant>
 #include <zephyr/drivers/uart.h>
+#include <zephyr/kernel.h>
 
 namespace lefse
 {
+
+#ifdef CONFIG_UART_ASYNC_API
+
+namespace async_events
+{
+
+struct tx_done
+{
+    const std::span<const uint8_t> span;
+};
+
+struct tx_aborted
+{
+    const std::span<const uint8_t> span;
+};
+
+struct rx_ready
+{
+    std::span<uint8_t> span;
+};
+
+struct rx_buf_request
+{
+};
+
+struct rx_buf_released
+{
+    uint8_t* buf;
+};
+
+struct rx_disabled
+{
+};
+
+struct rx_stopped
+{
+    uart_rx_stop_reason reason;
+    rx_ready            data;
+};
+
+} // namespace async_events
+
+using async_event = std::variant<async_events::rx_stopped,
+                                 async_events::rx_disabled,
+                                 async_events::rx_buf_released,
+                                 async_events::rx_buf_request,
+                                 async_events::rx_ready,
+                                 async_events::tx_aborted,
+                                 async_events::tx_done>;
+
+namespace details
+{
+
+inline constexpr async_event event_struct_to_variant(const uart_event& evt)
+{
+    using namespace async_events;
+    switch (evt.type)
+    {
+        case UART_TX_DONE: return tx_done { { evt.data.tx.buf, evt.data.tx.len } };
+        case UART_TX_ABORTED: return tx_aborted { { evt.data.tx.buf, evt.data.tx.len } };
+        case UART_RX_RDY:
+            return rx_ready { { evt.data.rx.buf + evt.data.rx.offset, evt.data.rx.len } };
+        case UART_RX_BUF_REQUEST: return rx_buf_request {};
+        case UART_RX_BUF_RELEASED: return rx_buf_released { evt.data.rx_buf.buf };
+        case UART_RX_DISABLED: return rx_disabled {};
+        case UART_RX_STOPPED:
+            return rx_stopped { evt.data.rx_stop.reason,
+                                { { evt.data.rx.buf + evt.data.rx.offset, evt.data.rx.len } } };
+    }
+    k_panic();
+    return async_event {};
+}
+
+} // namespace details
+
+#endif // ifdef CONFIG_UART_ASYNC_API
 
 /**
  * @brief Bas class for UART operations.
@@ -100,7 +179,7 @@ public:
 
 #ifdef CONFIG_UART_INTERRUPT_DRIVEN
 public:
-    using callback_type = stdext::inplace_function<void()>;
+    using interrupt_callback_type = stdext::inplace_function<void()>;
 
     /**
      * @brief Set the IRQ callback function.
@@ -114,7 +193,7 @@ public:
      * @retval -ENOSYS If this function is not implemented.
      * @retval -ENOTSUP If API is not enabled.
      */
-    int set_rx_interrupt_callback(callback_type callback) noexcept
+    int set_rx_interrupt_callback(interrupt_callback_type callback) noexcept
     {
         rx_interrupt_callback_ = callback;
 
@@ -190,8 +269,66 @@ public:
     }
 
 private:
-    callback_type rx_interrupt_callback_;
+    interrupt_callback_type rx_interrupt_callback_;
 #endif // ifdef CONFIG_UART_INTERRUPT_DRIVEN
+
+#ifdef CONFIG_UART_ASYNC_API
+public:
+    using async_callback_type = stdext::inplace_function<void(async_event)>;
+
+    int set_async_callback(async_callback_type async_callback) noexcept
+    {
+        async_event_callback_ = async_callback;
+
+        auto async_cb = [](const device* dev, uart_event* evt, void* user_data)
+        {
+            auto* uart = static_cast<uart_base<Uart_T>*>(user_data);
+
+            if (uart && uart->async_event_callback_)
+            {
+                uart->async_event_callback_(details::event_struct_to_variant(*evt));
+            }
+        };
+
+        return uart_callback_set(native_handle(), async_cb, this);
+    }
+
+    int rx_buf_rsp(std::span<value_type> span) noexcept
+    {
+        return uart_rx_buf_rsp(native_handle(), &span.front(), span.size_bytes());
+    }
+
+    int rx_disable() noexcept
+    {
+        return uart_rx_disable(native_handle());
+    }
+
+    int rx_enable(std::span<value_type> span, int32_t timeout) noexcept
+    {
+        return uart_rx_enable(native_handle(), &span.front(), span.size_bytes(), timeout);
+    }
+
+    int tx(std::span<value_type> span, int32_t timeout) noexcept
+    {
+        return uart_tx(native_handle(), &span.front(), span.size_bytes(), timeout);
+    }
+
+    int tx(std::string_view str, int32_t timeout) noexcept
+    {
+        return uart_tx(native_handle(),
+                       reinterpret_cast<const uint8_t*>(&str.front()),
+                       str.length(),
+                       timeout);
+    }
+
+    int tx_abort() noexcept
+    {
+        return uart_tx_abort(native_handle());
+    }
+
+private:
+    async_callback_type async_event_callback_;
+#endif // ifdef CONFIG_UART_ASYNC_API
 };
 
 /**
