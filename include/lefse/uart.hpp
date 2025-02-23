@@ -1,6 +1,8 @@
 #ifndef LEFSE_UART_HPP_INCLUDED
 #define LEFSE_UART_HPP_INCLUDED
 
+#ifdef CONFIG_SERIAL
+
 #include "sg14/inplace_function.h"
 
 #include <span>
@@ -366,4 +368,6 @@ public:
 
 } // namespace lefse
 
-#endif // LEFSE_UART_HPP_INCLUDED
+#endif // ifdef CONFIG_SERIAL
+
+#endif // ifndef LEFSE_UART_HPP_INCLUDED

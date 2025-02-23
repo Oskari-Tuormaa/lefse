@@ -353,4 +353,4 @@ public:
 
 } // namespace lefse
 
-#endif // LEFSE_TIMER_HPP_INCLUDED
+#endif // ifndef LEFSE_TIMER_HPP_INCLUDED

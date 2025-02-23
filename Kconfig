@@ -1,0 +1,4 @@
+config LEFSE
+    bool "Lefse C++ Wrappers"
+    default y
+    depends on CPP && STD_CPP20

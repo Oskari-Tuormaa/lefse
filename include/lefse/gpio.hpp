@@ -1,6 +1,8 @@
 #ifndef LEFSE_GPIO_HPP_INCLUDED
 #define LEFSE_GPIO_HPP_INCLUDED
 
+#ifdef CONFIG_GPIO
+
 #include "sg14/inplace_function.h"
 
 #include <zephyr/drivers/gpio.h>
@@ -402,4 +404,6 @@ public:
 
 } // namespace lefse
 
-#endif // LEFSE_GPIO_HPP_INCLUDED
+#endif // ifdef CONFIG_GPIO
+
+#endif // ifndef LEFSE_GPIO_HPP_INCLUDED

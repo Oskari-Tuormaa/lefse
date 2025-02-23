@@ -1,1 +1,1 @@
-zephyr_include_directories(include)
+zephyr_include_directories_ifdef(CONFIG_LEFSE include)
