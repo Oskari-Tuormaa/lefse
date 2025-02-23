@@ -9,6 +9,19 @@
 - Seamless integration with existing Zephyr projects
 - Lightweight and efficient, designed for embedded systems
 
+## ⚡ Supported APIs
+
+**lefse** currently offers C++ wrappers for the following Zephyr APIs:
+
+- **Timer** – Easy-to-use abstractions for managing system timers.  
+- **UART** – Comprehensive UART support:  
+  - **Polling** mode  
+  - **Interrupt-driven** mode  
+  - **Asynchronous** mode  
+- **GPIO** – Simplified GPIO configuration and event handling.  
+
+Additional API wrappers are planned for future releases.
+
 ## 📦 Getting Started
 
 ### Prerequisites
@@ -33,6 +46,21 @@ Then, run:
 
 ```bash
 west update
+```
+
+### Using lefse in Your Project
+
+Simply include **lefse** headers in your C++ code:
+
+```cpp
+#include <lefse/uart.hpp>
+
+lefse::uart uart { DEVICE_DT_GET(DT_NODELABEL(uart0)) };
+
+int main() {
+    uart.write("Hello, Zephyr!\n");
+    return 0;
+}
 ```
 
 <!--## 📚 Documentation-->
