@@ -2,13 +2,6 @@
 
 **lefse** is a Zephyr module providing modern **C++ wrappers** for various C APIs within the [Zephyr RTOS](https://zephyrproject.org/) framework. It simplifies development by offering safer and more intuitive C++ abstractions while maintaining full compatibility with Zephyr's underlying C APIs.
 
-## ✨ Features
-
-- C++ wrappers for key Zephyr C APIs
-- Improved type safety and resource management using RAII patterns
-- Seamless integration with existing Zephyr projects
-- Lightweight and efficient, designed for embedded systems
-
 ## ⚡ Supported APIs
 
 **lefse** currently offers C++ wrappers for the following Zephyr APIs:
