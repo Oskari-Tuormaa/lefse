@@ -41,6 +41,22 @@ public:
     }
 
     /**
+     * @brief Start the timer.
+     *
+     * This method starts the timer, and resets its status to zero. The timer begins counting down
+     * using the specified period.
+     *
+     * Attempting to start a timer that is already running is permitted. The timer's status is reset
+     * to zero and the timer begins counting down using the new period value.
+     *
+     * @param period Timer period.
+     */
+    void start(k_timeout_t period) noexcept
+    {
+        k_timer_start(native_handle(), period, period);
+    }
+
+    /**
      * @brief Start the timer as a one-shot.
      *
      * This method starts the timer as a one-shot, and resets its status to zero. The timer begins
@@ -51,7 +67,7 @@ public:
      *
      * @param duration Timer duration.
      */
-    void start(k_timeout_t duration) noexcept
+    void start_oneshot(k_timeout_t duration) noexcept
     {
         k_timer_start(native_handle(), duration, K_NO_WAIT);
     }
