@@ -17,45 +17,101 @@ namespace lefse
 
 #ifdef CONFIG_UART_ASYNC_API
 
+/**
+ * @brief Contains a struct for each async event type, containing relevant data.
+ */
 namespace async_events
 {
 
+/** @brief Whole TX buffer was transmitted. */
 struct tx_done
 {
+    /** std::span to current buffer. */
     const std::span<const uint8_t> span;
 };
 
+/**
+ * @brief Transmitting aborted due to timeout or uart_tx_abort call
+ *
+ * When flow control is enabled, there is a possibility that TX transfer
+ * won't finish in the allotted time. Some data may have been
+ * transferred, information about it can be found in event data.
+ */
 struct tx_aborted
 {
+    /** @brief std::span to current buffer. */
     const std::span<const uint8_t> span;
 };
 
+/**
+ * @brief Received data is ready for processing.
+ *
+ * This event is generated in the following cases:
+ * - When RX timeout occurred, and data was stored in provided buffer.
+ *   This can happen multiple times in the same buffer.
+ * - When provided buffer is full.
+ * - After uart::rx_disable().
+ * - After stopping due to external event (#rx_stopped).
+ */
 struct rx_ready
 {
+    /** @brief std::span to received data. */
     std::span<uint8_t> span;
 };
 
+/**
+ * @brief Driver requests next buffer for continuous reception.
+ *
+ * This event is triggered when receiving has started for a new buffer,
+ * i.e. it's time to provide a next buffer for a seamless switchover to
+ * it. For continuous reliable receiving, user should provide another RX
+ * buffer in response to this event, using uart::rx_buf_rsp method
+ *
+ * If uart::rx_buf_rsp is not called before current buffer
+ * is filled up, receiving will stop.
+ */
 struct rx_buf_request
 {
 };
 
+/**
+ * @brief Buffer is no longer used by UART driver.
+ */
 struct rx_buf_released
 {
+    /** @brief Pointer to buffer that is no longer in use. */
     uint8_t* buf;
 };
 
+/**
+ * @brief RX has been disabled and can be reenabled.
+ *
+ * This event is generated whenever receiver has been stopped, disabled
+ * or finished its operation and can be enabled again using
+ * uart::rx_enable
+ */
 struct rx_disabled
 {
 };
 
+/**
+ * @brief RX has stopped due to external event.
+ *
+ * Reason is one of uart_rx_stop_reason.
+ */
 struct rx_stopped
 {
+    /** @brief Reason why receiving stopped */
     uart_rx_stop_reason reason;
-    rx_ready            data;
+    /** @brief Last received data. */
+    rx_ready data;
 };
 
 } // namespace async_events
 
+/**
+ * @brief std::variant type for all possible async_events.
+ */
 using async_event = std::variant<async_events::rx_stopped,
                                  async_events::rx_disabled,
                                  async_events::rx_buf_released,
@@ -67,6 +123,12 @@ using async_event = std::variant<async_events::rx_stopped,
 namespace details
 {
 
+/**
+ * @brief Converts a given uart_event struct to matching async_event variant.
+ *
+ * @param evt uart_event struct to convert
+ * @return Event converted to matching async_event variant.
+ */
 inline constexpr async_event event_struct_to_variant(const uart_event& evt)
 {
     using namespace async_events;
@@ -92,7 +154,7 @@ inline constexpr async_event event_struct_to_variant(const uart_event& evt)
 #endif // ifdef CONFIG_UART_ASYNC_API
 
 /**
- * @brief Bas class for UART operations.
+ * @brief Base class for UART operations.
  *
  * This class serves as a template base for UART handling, allowing derived
  * classes to define their specific UART implementations.
@@ -278,6 +340,18 @@ private:
 public:
     using async_callback_type = stdext::inplace_function<void(async_event)>;
 
+    /**
+     * @brief Set event handler function.
+     *
+     * Since it is mandatory to set callback to use other asynchronous functions, it can be used to
+     * detect if the device supports asynchronous API. Remaining API does not have that detection.
+     *
+     * @param async_callback Event handler.
+     *
+     * @retval 0 If successful.
+     * @retval -ENOSYS If not supported by the device.
+     * @retval -ENOTSUP If API not enabled.
+     */
     int set_async_callback(async_callback_type async_callback) noexcept
     {
         async_event_callback_ = async_callback;
@@ -295,26 +369,101 @@ public:
         return uart_callback_set(native_handle(), async_cb, this);
     }
 
+    /**
+     * @brief Provide receive buffer in response to #UART_RX_BUF_REQUEST event.
+     *
+     * Provide span into RX buffer, which will be used when current buffer is filled.
+     *
+     * @note Providing buffer that is already in usage by driver leads to undefined behavior. Buffer
+     * can be reused when it has been released by driver.
+     *
+     * @param span Span pointing to receive buffer.
+     *
+     * @retval 0 If successful.
+     * @retval -ENOTSUP If API is not enabled.
+     * @retval -EBUSY Next buffer already set.
+     * @retval -EACCES Receiver is already disabled (function called too late?).
+     * @retval -errno Other negative errno value in case of failure.
+     */
     int rx_buf_rsp(std::span<value_type> span) noexcept
     {
         return uart_rx_buf_rsp(native_handle(), &span.front(), span.size_bytes());
     }
 
+    /**
+     * @brief Disable RX
+     *
+     * #rx_buf_released event will be generated for every buffer scheduled, after that #rx_disabled
+     * event will be generated. Additionally, if there is any pending received data, the #rx_ready
+     * event for that data will be generated before the #rx_buf_released events.
+     *
+     * @retval 0 If successful.
+     * @retval -ENOTSUP If API is not enabled.
+     * @retval -EFAULT There is no active reception.
+     * @retval -errno Other negative errno value in case of failure.
+     */
     int rx_disable() noexcept
     {
         return uart_rx_disable(native_handle());
     }
 
+    /**
+     * @brief Start receiving data through UART.
+     *
+     * Function sets given buffer as first buffer for receiving and returns immediately. After that
+     * event handler, set using @ref uart::set_async_callback, is called with #rx_ready or
+     * #rx_buf_request events.
+     *
+     * @param span Span pointing to receive buffer.
+     * @param timeout Inactivity period after receiving at least a byte which triggers #rx_ready
+     *                event. Given in microseconds. @ref SYS_FOREVER_US disables timeout. See @ref
+     *                uart_event_type for details.
+     *
+     * @retval 0 If successful.
+     * @retval -ENOTSUP If API is not enabled.
+     * @retval -EBUSY RX already in progress.
+     * @retval -errno Other negative errno value in case of failure.
+     */
     int rx_enable(std::span<value_type> span, int32_t timeout) noexcept
     {
         return uart_rx_enable(native_handle(), &span.front(), span.size_bytes(), timeout);
     }
 
+    /**
+     * @brief Send given number of bytes from buffer through UART.
+     *
+     * Function returns immediately and event handler, set using @ref uart::set_async_callback, is
+     * called after transfer is finished.
+     *
+     * @param span Span pointing to transmit buffer.
+     * @param timeout Timeout in microseconds. Valid only if flow control is enabled. @ref
+     *                SYS_FOREVER_US disables timeout.
+     *
+     * @retval 0 If successful.
+     * @retval -ENOTSUP If API is not enabled.
+     * @retval -EBUSY If There is already an ongoing transfer.
+     * @retval -errno Other negative errno value in case of failure.
+     */
     int tx(const std::span<const value_type> span, int32_t timeout) noexcept
     {
         return uart_tx(native_handle(), &span.front(), span.size_bytes(), timeout);
     }
 
+    /**
+     * @brief Send a string_view through UART.
+     *
+     * Function returns immediately and event handler, set using @ref uart::set_async_callback, is
+     * called after transfer is finished.
+     *
+     * @param str string_view pointing to data to send.
+     * @param timeout Timeout in microseconds. Valid only if flow control is enabled. @ref
+     *                SYS_FOREVER_US disables timeout.
+     *
+     * @retval 0 If successful.
+     * @retval -ENOTSUP If API is not enabled.
+     * @retval -EBUSY If There is already an ongoing transfer.
+     * @retval -errno Other negative errno value in case of failure.
+     */
     int tx(const std::string_view str, int32_t timeout) noexcept
     {
         return uart_tx(native_handle(),
@@ -323,6 +472,16 @@ public:
                        timeout);
     }
 
+    /**
+     * @brief Abort current TX transmission.
+     *
+     * #tx_done event will be generated with amount of data sent.
+     *
+     * @retval 0 If successful.
+     * @retval -ENOTSUP If API is not enabled.
+     * @retval -EFAULT There is no active transmission.
+     * @retval -errno Other negative errno value in case of failure.
+     */
     int tx_abort() noexcept
     {
         return uart_tx_abort(native_handle());
