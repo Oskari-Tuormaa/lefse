@@ -1,35 +1,34 @@
 #include <lefse/gpio.hpp>
 #include <lefse/timer.hpp>
-#include <zephyr/logging/log.h>
 
-LOG_MODULE_REGISTER(main);
+constexpr auto timer_period = K_MSEC(1000);
 
-lefse::gpio led_gpio { GPIO_DT_SPEC_GET(DT_ALIAS(led0), gpios) };
+lefse::gpio led { GPIO_DT_SPEC_GET(DT_ALIAS(led0), gpios) };
 
 lefse::timer timer;
 
 int main()
 {
-    int err;
+    int  ret;
+    bool led_state = true;
 
-    if (!led_gpio.is_ready())
+    if (!led.is_ready())
     {
-        LOG_ERR("Device %s not ready", led_gpio.native_handle()->port->name);
-        return -1;
+        return 0;
     }
 
-    err = led_gpio.configure(lefse::gpio_direction::output);
-    if (err < 0)
+    ret = led.configure(lefse::gpio_direction::output);
+    if (ret < 0)
     {
-        LOG_ERR("Error configuring %s [%d]", led_gpio.native_handle()->port->name, err);
-        return err;
+        return ret;
     }
 
-    timer.set_expiry_callback(
-        []
-        {
-            LOG_INF("Toggling!");
-            led_gpio.toggle();
-        });
-    timer.start(K_MSEC(1000));
+    auto expiry_callback = [&led_state]
+    {
+        led_state = !led_state;
+        led.set(led_state);
+        printf("LED state: %s\r\n", led_state ? "ON" : "OFF");
+    };
+    timer.set_expiry_callback(expiry_callback);
+    timer.start(timer_period);
 }
