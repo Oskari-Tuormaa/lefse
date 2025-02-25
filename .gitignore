@@ -1,0 +1,6 @@
+# Temporary directories
+build/
+.cache/
+
+# OKT: Directory containing my neovim workspace for this project
+.nvim-workspace/
