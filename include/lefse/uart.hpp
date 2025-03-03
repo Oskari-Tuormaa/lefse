@@ -166,6 +166,137 @@ public:
     using native_type = const device*;
     using value_type  = uint8_t;
 
+    /** @brief Parity modes */
+    enum class parity : decltype(uart_config::parity)
+    {
+        none  = UART_CFG_PARITY_NONE,  /**< No parity */
+        odd   = UART_CFG_PARITY_ODD,   /**< Odd parity */
+        even  = UART_CFG_PARITY_EVEN,  /**< Even parity */
+        mark  = UART_CFG_PARITY_MARK,  /**< Mark parity */
+        space = UART_CFG_PARITY_SPACE, /**< Space parity */
+    };
+
+    /** @brief Number of stop bits. */
+    enum class stop_bits : decltype(uart_config::stop_bits)
+    {
+        b0_5 = UART_CFG_STOP_BITS_0_5, /**< 0.5 stop bit */
+        b1   = UART_CFG_STOP_BITS_1,   /**< 1 stop bit */
+        b1_5 = UART_CFG_STOP_BITS_1_5, /**< 1.5 stop bits */
+        b2   = UART_CFG_STOP_BITS_2,   /**< 2 stop bits */
+    };
+
+    /** @brief Number of data bits. */
+    enum class data_bits : decltype(uart_config::data_bits)
+    {
+        b5 = UART_CFG_DATA_BITS_5, /**< 5 data bits */
+        b6 = UART_CFG_DATA_BITS_6, /**< 6 data bits */
+        b7 = UART_CFG_DATA_BITS_7, /**< 7 data bits */
+        b8 = UART_CFG_DATA_BITS_8, /**< 8 data bits */
+        b9 = UART_CFG_DATA_BITS_9, /**< 9 data bits */
+    };
+
+    /**
+     * @brief Hardware flow control options.
+     */
+    enum class flow_control : decltype(uart_config::flow_ctrl)
+    {
+        none    = UART_CFG_FLOW_CTRL_NONE,    /**< No flow control */
+        rts_cts = UART_CFG_FLOW_CTRL_RTS_CTS, /**< RTS/CTS flow control */
+        dtr_dsr = UART_CFG_FLOW_CTRL_DTR_DSR, /**< DTR/DSR flow control */
+        rs485   = UART_CFG_FLOW_CTRL_RS485,   /**< RS485 flow control */
+    };
+
+    /**
+     * @brief UART controller configuration structure
+     */
+    struct config
+    {
+        uint32_t                baudrate; /**< Baudrate setting in bps */
+        uart_base::parity       parity       = parity::none;
+        uart_base::stop_bits    stop_bits    = stop_bits::b1;
+        uart_base::data_bits    data_bits    = data_bits::b8;
+        uart_base::flow_control flow_control = flow_control::none;
+    };
+
+    /**
+     * @brief Set UART configuration.
+     *
+     * @param baudrate Baudrate setting in bps.
+     * @param parity Parity mode.
+     * @param stop_bits Number of stop bits.
+     * @param data_bits Number of data bits.
+     * @param flow_control Hardware flow control option.
+     *
+     * @retval 0 If successful.
+     * @retval -errno Negative errno code in case of failure.
+     * @retval -ENOSYS If configuration is not supported by device or driver does not support
+     *         setting configuration in runtime.
+     * @retval -ENOTSUP If API is not enabled.
+     */
+    int configure(uint32_t     baudrate,
+                  parity       parity       = parity::none,
+                  stop_bits    stop_bits    = stop_bits::b1,
+                  data_bits    data_bits    = data_bits::b8,
+                  flow_control flow_control = flow_control::none)
+    {
+        uart_config cfg { .baudrate  = baudrate,
+                          .parity    = static_cast<uint8_t>(parity),
+                          .stop_bits = static_cast<uint8_t>(stop_bits),
+                          .data_bits = static_cast<uint8_t>(data_bits),
+                          .flow_ctrl = static_cast<uint8_t>(flow_control) };
+
+        return uart_configure(native_handle(), &cfg);
+    }
+
+    /**
+     * @brief Set UART configuration.
+     *
+     * @param cfg Reference to configuration structure.
+     *
+     * @retval 0 If successful.
+     * @retval -errno Negative errno code in case of failure.
+     * @retval -ENOSYS If configuration is not supported by device or driver does not support
+     *         setting configuration in runtime.
+     * @retval -ENOTSUP If API is not enabled.
+     */
+    int configure(const config& cfg)
+    {
+        return configure(cfg.baudrate, cfg.parity, cfg.stop_bits, cfg.data_bits, cfg.flow_control);
+    }
+
+    /**
+     * @brief Get UART configuration.
+     *
+     * Stores current UART configuration to \*cfg, can be used to retrieve initial configuration
+     * after device was initialized using data from DTS.
+     *
+     * @param cfg UART configuration structure.
+     *
+     * @retval 0 If successful.
+     * @retval -errno Negative errno code in case of failure.
+     * @retval -ENOSYS If driver does not support getting current configuration.
+     * @retval -ENOTSUP If API is not enabled.
+     */
+    int config_get(config* cfg)
+    {
+        int         res;
+        uart_config uart_cfg;
+
+        res = uart_config_get(native_handle(), &uart_cfg);
+        if (res < 0)
+        {
+            return res;
+        }
+
+        cfg->baudrate     = uart_cfg.baudrate;
+        cfg->parity       = static_cast<parity>(uart_cfg.parity);
+        cfg->stop_bits    = static_cast<stop_bits>(uart_cfg.stop_bits);
+        cfg->data_bits    = static_cast<data_bits>(uart_cfg.data_bits);
+        cfg->flow_control = static_cast<flow_control>(uart_cfg.flow_ctrl);
+
+        return res;
+    }
+
     /**
      * @brief Verify that the device is ready for use.
      *

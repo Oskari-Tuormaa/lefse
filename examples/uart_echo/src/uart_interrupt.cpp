@@ -6,9 +6,25 @@ LOG_MODULE_REGISTER(uart_interrupt);
 
 lefse::uart uart { DEVICE_DT_GET(DT_NODELABEL(uart0)) };
 
+#define CHECK_ERR(check, ...) \
+    if (check)                \
+    {                         \
+        LOG_ERR(__VA_ARGS__); \
+        return err;           \
+    }
+
 int setup_uart()
 {
     int err;
+
+    if (!uart.is_ready())
+    {
+        LOG_ERR("Device %s was not ready", uart.native_handle()->name);
+        return -1;
+    }
+
+    err = uart.configure(115200);
+    CHECK_ERR(err < 0, "Failed configuring device %s [%d]", uart.native_handle()->name, err);
 
     err = uart.set_rx_interrupt_callback(
         []
@@ -19,14 +35,10 @@ int setup_uart()
                 uart.write(ch);
             }
         });
-
-    if (err < 0)
-    {
-        LOG_ERR("Failed setting rx interrupt callback on device %s [%d]",
-                uart.native_handle()->name,
-                err);
-        return err;
-    }
+    CHECK_ERR(err < 0,
+              "Failed setting rx interrupt callback on device %s [%d]",
+              uart.native_handle()->name,
+              err);
 
     uart.irq_rx_enable();
 

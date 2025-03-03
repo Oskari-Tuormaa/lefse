@@ -25,6 +25,15 @@ int setup_uart()
 {
     int err;
 
+    if (!uart.is_ready())
+    {
+        LOG_ERR("Device %s was not ready", uart.native_handle()->name);
+        return -1;
+    }
+
+    err = uart.configure(115200);
+    CHECK_ERR(err < 0, "Failed to configure device %s [%d]", uart.native_handle()->name, err);
+
     err = uart.set_async_callback(
         [](auto evt)
         {
