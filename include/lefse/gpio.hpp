@@ -12,52 +12,6 @@ namespace lefse
 {
 
 /**
- * @enum gpio_direction
- * @brief Defines the possible directions for a GPIO pin.
- */
-enum class gpio_direction
-{
-    input        = GPIO_INPUT,       /**< GPIO is configured as an input. */
-    output       = GPIO_OUTPUT,      /**< GPIO is configured as an output. */
-    disconnected = GPIO_DISCONNECTED /**< GPIO is disconnected. */
-};
-
-/**
- * @enum gpio_pull
- * @brief Defines the possible pull configurations for a GPIO pin.
- */
-enum class gpio_pull
-{
-    none      = 0,             /**< No pull resistor is enabled. */
-    pull_up   = GPIO_PULL_UP,  /**< Pull-up resistor is enabled. */
-    pull_down = GPIO_PULL_DOWN /**< Pull-down resistor is enabled. */
-};
-
-/**
- * @enum gpio_output_init
- * @brief Defines the possible initial states for a GPIO output pin.
- */
-enum class gpio_output_init
-{
-    none    = 0,                       /**< No specific initial state. */
-    low     = GPIO_OUTPUT_INIT_LOW,    /**< Output initializes to low state. */
-    high    = GPIO_OUTPUT_INIT_HIGH,   /**< Output initializes to high state. */
-    logical = GPIO_OUTPUT_INIT_LOGICAL /**< Output initializes to logical level. */
-};
-
-/**
- * @enum gpio_interrupt
- * @brief Defines the possible interrupt configurations for a GPIO pin.
- */
-enum class gpio_interrupt
-{
-    none         = GPIO_INT_DISABLE,      /**< No interrupt is enabled. */
-    edge_falling = GPIO_INT_EDGE_FALLING, /**< Interrupt on falling edge. */
-    edge_rising  = GPIO_INT_EDGE_RISING,  /**< Interrupt on rising edge. */
-    edge_both    = GPIO_INT_EDGE_BOTH     /**< Interrupt on both edges. */
-};
-
-/**
  * @class gpio_cb
  * @brief Represents a GPIO callback handler.
  *
@@ -157,6 +111,48 @@ public:
     using native_const_pointer = const native_type*;
 
     /**
+     * @brief Defines the possible directions for a GPIO pin.
+     */
+    enum class direction
+    {
+        input        = GPIO_INPUT,       /**< GPIO is configured as an input. */
+        output       = GPIO_OUTPUT,      /**< GPIO is configured as an output. */
+        disconnected = GPIO_DISCONNECTED /**< GPIO is disconnected. */
+    };
+
+    /**
+     * @brief Defines the possible pull configurations for a GPIO pin.
+     */
+    enum class pull
+    {
+        none      = 0,             /**< No pull resistor is enabled. */
+        pull_up   = GPIO_PULL_UP,  /**< Pull-up resistor is enabled. */
+        pull_down = GPIO_PULL_DOWN /**< Pull-down resistor is enabled. */
+    };
+
+    /**
+     * @brief Defines the possible initial states for a GPIO output pin.
+     */
+    enum class output_init
+    {
+        none    = 0,                       /**< No specific initial state. */
+        low     = GPIO_OUTPUT_INIT_LOW,    /**< Output initializes to low state. */
+        high    = GPIO_OUTPUT_INIT_HIGH,   /**< Output initializes to high state. */
+        logical = GPIO_OUTPUT_INIT_LOGICAL /**< Output initializes to logical level. */
+    };
+
+    /**
+     * @brief Defines the possible interrupt configurations for a GPIO pin.
+     */
+    enum class interrupt
+    {
+        none         = GPIO_INT_DISABLE,      /**< No interrupt is enabled. */
+        edge_falling = GPIO_INT_EDGE_FALLING, /**< Interrupt on falling edge. */
+        edge_rising  = GPIO_INT_EDGE_RISING,  /**< Interrupt on rising edge. */
+        edge_both    = GPIO_INT_EDGE_BOTH     /**< Interrupt on both edges. */
+    };
+
+    /**
      * @brief Checks if the GPIO is ready for use.
      *
      * @return True if the GPIO is ready, false otherwise.
@@ -175,9 +171,9 @@ public:
      * @param output_init Initial output state (default: none).
      * @return Zero on success, or a negative error code on failure.
      */
-    int configure(gpio_direction   direction,
-                  gpio_pull        pull        = gpio_pull::none,
-                  gpio_output_init output_init = gpio_output_init::none) noexcept
+    int configure(direction   direction,
+                  pull        pull        = pull::none,
+                  output_init output_init = output_init::none) noexcept
     {
         gpio_flags_t flags = static_cast<gpio_flags_t>(direction) | static_cast<gpio_flags_t>(pull)
                              | static_cast<gpio_flags_t>(output_init);
@@ -191,7 +187,7 @@ public:
      * edge, etc.).
      * @return Zero on success, or a negative error code on failure.
      */
-    int configure_interrupt(gpio_interrupt trigger)
+    int configure_interrupt(interrupt trigger)
     {
         gpio_flags_t flags = static_cast<gpio_flags_t>(trigger);
         return gpio_pin_interrupt_configure_dt(native_handle(), flags);
@@ -223,6 +219,7 @@ public:
      * @brief Sets the GPIO output to a specified value.
      *
      * @param value The output value (0 or 1).
+     *
      * @return Zero on success, or a negative error code on failure.
      */
     int set(int value) noexcept

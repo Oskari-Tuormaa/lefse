@@ -17,7 +17,7 @@ int main()
         return 0;
     }
 
-    ret = led.configure(lefse::gpio_direction::output);
+    ret = led.configure(lefse::gpio::direction::output);
     if (ret < 0)
     {
         return ret;
