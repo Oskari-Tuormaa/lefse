@@ -222,10 +222,10 @@ public:
      * @brief Set UART configuration.
      *
      * @param baudrate Baudrate setting in bps.
-     * @param parity Parity mode.
-     * @param stop_bits Number of stop bits.
-     * @param data_bits Number of data bits.
-     * @param flow_control Hardware flow control option.
+     * @param parity Parity mode (default: none).
+     * @param stop_bits Number of stop bits (default: 1).
+     * @param data_bits Number of data bits (default: 8).
+     * @param flow_control Hardware flow control option (default: none).
      *
      * @retval 0 If successful.
      * @retval -errno Negative errno code in case of failure.
