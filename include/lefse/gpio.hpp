@@ -249,6 +249,16 @@ public:
     }
 
     /**
+     * @brief Retrives the name of the device instance.
+     *
+     * @return The name of the device instance.
+     */
+    const char* name() const noexcept
+    {
+        return native_handle()->port->name;
+    }
+
+    /**
      * @brief Retrieves a pointer to the native GPIO descriptor.
      *
      * @return A mutable pointer to the native GPIO descriptor.

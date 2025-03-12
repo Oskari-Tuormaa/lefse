@@ -363,6 +363,16 @@ public:
     }
 
     /**
+     * @brief Retrives the name of the device instance.
+     *
+     * @return The name of the device instance.
+     */
+    const char* name() const noexcept
+    {
+        return native_handle()->name;
+    }
+
+    /**
      * @brief Retrieves a pointer to the native UART descriptor.
      *
      * @return A constant pointer to the native UART descriptor.

@@ -12,14 +12,14 @@ int setup_uart()
 
     if (!uart.is_ready())
     {
-        LOG_ERR("Uart %s was not ready", uart.native_handle()->name);
+        LOG_ERR("Uart %s was not ready", uart.name());
         return -1;
     }
 
     err = uart.configure(115200);
     if (err < 0)
     {
-        LOG_ERR("Failed configuring device %s [%d]", uart.native_handle()->name, err);
+        LOG_ERR("Failed configuring device %s [%d]", uart.name(), err);
         return err;
     }
 

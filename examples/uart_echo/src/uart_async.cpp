@@ -27,12 +27,12 @@ int setup_uart()
 
     if (!uart.is_ready())
     {
-        LOG_ERR("Device %s was not ready", uart.native_handle()->name);
+        LOG_ERR("Device %s was not ready", uart.name());
         return -1;
     }
 
     err = uart.configure(115200);
-    CHECK_ERR(err < 0, "Failed to configure device %s [%d]", uart.native_handle()->name, err);
+    CHECK_ERR(err < 0, "Failed to configure device %s [%d]", uart.name(), err);
 
     err = uart.set_async_callback(
         [](auto evt)
@@ -51,13 +51,13 @@ int setup_uart()
         });
     CHECK_ERR(err < 0,
               "Failed setting rx interrupt callback on device %s [%d]",
-              uart.native_handle()->name,
+              uart.name(),
               err);
 
     err = uart.rx_enable(buf, USEC_PER_MSEC);
     CHECK_ERR(err < 0,
               "Failed enabling receiving data on device %s [%d]",
-              uart.native_handle()->name,
+              uart.name(),
               err);
 
     return 0;
