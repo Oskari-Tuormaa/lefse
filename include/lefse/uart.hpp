@@ -591,6 +591,24 @@ public:
     }
 
     /**
+     * @brief Send given number of bytes from buffer through UART.
+     *
+     * Function returns immediately and event handler, set using @ref uart::set_async_callback, is
+     * called after transfer is finished.
+     *
+     * @param span Span pointing to transmit buffer.
+     *
+     * @retval 0 If successful.
+     * @retval -ENOTSUP If API is not enabled.
+     * @retval -EBUSY If There is already an ongoing transfer.
+     * @retval -errno Other negative errno value in case of failure.
+     */
+    int tx(const std::span<const value_type> span) noexcept
+    {
+        return tx(span, SYS_FOREVER_US);
+    }
+
+    /**
      * @brief Send a string_view through UART.
      *
      * Function returns immediately and event handler, set using @ref uart::set_async_callback, is
