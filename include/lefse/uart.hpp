@@ -604,6 +604,62 @@ public:
     }
 
     /**
+     * @brief Send a string_view through UART.
+     *
+     * Function returns immediately and event handler, set using @ref uart::set_async_callback, is
+     * called after transfer is finished.
+     *
+     * @param str string_view pointing to data to send.
+     *
+     * @retval 0 If successful.
+     * @retval -ENOTSUP If API is not enabled.
+     * @retval -EBUSY If There is already an ongoing transfer.
+     * @retval -errno Other negative errno value in case of failure.
+     */
+    int tx(const std::string_view str) noexcept
+    {
+        return tx(str, SYS_FOREVER_US);
+    }
+
+    /**
+     * @brief Send a single character through UART.
+     *
+     * Function returns immediately and event handler, set using @ref uart::set_async_callback, is
+     * called after transfer is finished.
+     *
+     * @param ch Character to send
+     * @param timeout Timeout in microseconds. Valid only if flow control is enabled. @ref
+     *                SYS_FOREVER_US disables timeout.
+     *
+     * @retval 0 If successful.
+     * @retval -ENOTSUP If API is not enabled.
+     * @retval -EBUSY If There is already an ongoing transfer.
+     * @retval -errno Other negative errno value in case of failure.
+     */
+    int tx(uint8_t ch, int32_t timeout) noexcept
+    {
+        return uart_tx(native_handle(), &ch, 1, timeout);
+    }
+
+    /**
+     * @brief Send a single character through UART.
+     *
+     * Function returns immediately and event handler, set using @ref uart::set_async_callback, is
+     * called after transfer is finished.
+     *
+     * @param ch Character to send
+     *
+     * @retval 0 If successful.
+     * @retval -ENOTSUP If API is not enabled.
+     * @retval -EBUSY If There is already an ongoing transfer.
+     * @retval -errno Other negative errno value in case of failure.
+     */
+    int tx(uint8_t ch) noexcept
+    {
+        return tx(ch, SYS_FOREVER_US);
+    }
+
+    /**
      * @brief Abort current TX transmission.
      *
      * #tx_done event will be generated with amount of data sent.
